@@ -7,7 +7,6 @@ import (
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/extensions"
 	"net/url"
-	"os"
 	"strings"
 	"ter_novel/config"
 )
@@ -127,13 +126,13 @@ func Fetcher_content(uri string)  {
 	})
 
 	c.OnHTML("div#content", func(e *colly.HTMLElement) {
-		data := strings.ReplaceAll(e.Text, "    ", "\n")
-		f, err := os.OpenFile("./data.txt", os.O_APPEND, 0660)
-		if err != nil {
-			f, _ = os.Create("./data.txt")
-		}
-		f.WriteString(data)
-		//fmt.Println(strings.ReplaceAll(e.Text, "    ", "\n"))
+		//data := strings.ReplaceAll(e.Text, "    ", "\n")
+		//f, err := os.OpenFile("./data.txt", os.O_APPEND, 0660)
+		//if err != nil {
+		//	f, _ = os.Create("./data.txt")
+		//}
+		//f.WriteString(data)
+		fmt.Println(strings.ReplaceAll(e.Text, "    ", "\n"))
 	})
 	c.Visit(uri)
 }
