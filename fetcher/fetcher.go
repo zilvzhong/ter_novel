@@ -6,8 +6,13 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/gocolly/colly/extensions"
+	"golang.org/x/net/html/charset"
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 	"net/url"
 	"strings"
+	"ter_novel/blank"
 	"ter_novel/config"
 )
 
@@ -69,7 +74,7 @@ type Course struct {
 func Fetcher_novel(name, uri string) (ti, address string) {
 	c := colly.NewCollector()
 	q := url.QueryEscape(name)
-	ul := "http://" + uri + q
+	ul := "https://" + uri + q
 
 	extensions.RandomUserAgent(c)
 	extensions.Referer(c)
@@ -108,6 +113,14 @@ func Fetcher_chapter(uri string) []config.Chapter {
 		})
 	})
 
+	c.OnHTML("ul", func(e *colly.HTMLElement)  {
+		e.DOM.Find("a[href]").Each(func(i int, selection *goquery.Selection) {
+			link, _:= selection.Attr("href")
+			addr := e.Request.AbsoluteURL(link)
+			chapter = append(chapter,config.Chapter{i, selection.Text(), addr})
+		})
+	})
+
 	c.OnError(func(r *colly.Response, err error) {
 		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError", err)
 	})
@@ -125,14 +138,38 @@ func Fetcher_content(uri string)  {
 		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError", err)
 	})
 
-	c.OnHTML("div#content", func(e *colly.HTMLElement) {
-		//data := strings.ReplaceAll(e.Text, "    ", "\n")
-		//f, err := os.OpenFile("./data.txt", os.O_APPEND, 0660)
-		//if err != nil {
-		//	f, _ = os.Create("./data.txt")
-		//}
-		//f.WriteString(data)
-		fmt.Println(strings.ReplaceAll(e.Text, "    ", "\n"))
+	//c.OnHTML("div#content", func(e *colly.HTMLElement) {
+	//
+	//	bufReader := bufio.NewReader(strings.NewReader(string(e.Response.Body)))
+	//	s := determineEncoding(bufReader)
+	//	utf8Reader := transform.NewReader(bufReader, s.NewDecoder())
+	//	doc, _ := goquery.NewDocumentFromReader(utf8Reader)
+	//	doc.Find("div#content")
+	//	data := blank.Remove(e.Text)
+	//	fmt.Println(data)
+	//})
+
+	c.OnResponse(func(r *colly.Response) {
+		bufReader := bufio.NewReader(strings.NewReader(string(r.Body)))
+		s := determineEncoding(bufReader)
+		utf8Reader := transform.NewReader(bufReader, s.NewDecoder())
+		doc, _ := goquery.NewDocumentFromReader(utf8Reader)
+		fmt.Println(blank.Remove(doc.Find("div#content").Text()))
 	})
+
 	c.Visit(uri)
+}
+
+
+
+//读取head，猜测编码
+func determineEncoding(r *bufio.Reader) encoding.Encoding {
+	bytes, err := r.Peek(1024)
+	if err != nil {
+		//log.Printf("编码 error: %v\n", err)
+		return unicode.UTF8
+	}
+	e, _, _ := charset.DetermineEncoding(
+		bytes, "")
+	return e
 }

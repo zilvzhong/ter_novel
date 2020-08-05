@@ -15,7 +15,7 @@ func main() {
 	defer func() {
 		color.Yellow("期待下次使用@@")
 	}()
-
+	config.ShowHelp()
 	L:
 	for {
 		fmt.Fprintf(color.Output, "$%s", color.CyanString("请输入搜索的作品名称："))
@@ -26,6 +26,8 @@ func main() {
 			continue
 		case name == "q":
 			break L
+		case name == "show":
+			fmt.Fprintf(color.Output,"$$%s", color.RedString("请输入搜索的作品，再通过show再查看表\n"))
 		case name == "help":
 			config.ShowHelp()
 			continue
@@ -34,9 +36,7 @@ func main() {
 			ch := make(chan config.Novel, len(config.SiteUrl))
 			for i, u := range config.SiteUrl {
 				go func(i int, u string) {
-					fmt.Println(i, u)
 					ti, addr := fetcher.Fetcher_novel(name, u)
-					fmt.Println(ti,addr)
 					if (ti != "" && addr != "") {
 						ch <- config.Novel{i, ti, addr}
 					} else {
@@ -65,6 +65,8 @@ func main() {
 					case id == "help":
 						config.ShowHelp()
 						continue
+					case id == "return":
+						break P
 					case id == "show":
 						table.Output(novel)
 					default:
@@ -76,6 +78,7 @@ func main() {
 							chapter := fetcher.Fetcher_chapter(n.Addr)
 							if len(chapter) != 0 {
 								table.Output(chapter)
+								R:
 								for {
 									fmt.Fprintf(color.Output, "$$$%s", color.CyanString("请输入查看的章节Id："))
 									chapterid := strings.TrimSpace(config.GetInputString())
@@ -84,11 +87,13 @@ func main() {
 										continue
 									case chapterid == "q":
 										break L
+									case chapterid == "show":
+										table.Output(chapter)
 									case chapterid == "help":
 										config.ShowHelp()
 										continue
 									case chapterid == "return":
-										break P
+										break R
 									default:
 										c, stu := config.Getcontent_id(chapterid, chapter)
 										fmt.Println(c)
@@ -108,11 +113,3 @@ func main() {
 		}
 	}
 }
-
-//func main() {
-//	s := "    十九年后    深秋，    冷雨连传来一阵阵的暖热，可是心中却是一片冰凉.......    为什么呢？    因"
-//	fmt.Println(strings.ReplaceAll(s, "    ", "\n"))
-//
-//	s1 := " 十九年后    深秋，    冷雨    感觉"
-//	fmt.Println(strings.ReplaceAll(s1, "    ", "\n"))
-//}
