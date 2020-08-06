@@ -40,7 +40,6 @@ func init() {
 		"www.dingdiann.com/searchbook.php?keyword=",
 		"www.booktxt.com/search.php?q=",
 		"www.qu.la/ar.php?keyWord=",
-		"www.zwdu.com/search.php?keyword=",
 		"www.30sy.com/search.html?searchtype=novelname&searchkey=",
 	}
 }
@@ -87,6 +86,7 @@ func ShowHelp()  {
 	fmt.Println()
 	fmt.Println("***** 输入show查看站点源或章节")
 	fmt.Println("***** 输入return时返回上一层")
+	fmt.Println("***** 输入p时返回下一章。")
 	fmt.Println("***** 输入q时程序退出。")
 	fmt.Println("***** 输入作品名称即可查询")
 	fmt.Println("***** 输入站点源Id或章节Id即可查看内容")

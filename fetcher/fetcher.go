@@ -9,7 +9,6 @@ import (
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/unicode"
-	"golang.org/x/text/transform"
 	"net/url"
 	"strings"
 	"ter_novel/blank"
@@ -95,7 +94,6 @@ func Fetcher_novel(name, uri string) (ti, address string) {
 		return
 	})
 	c.Visit(ul)
-	c.Wait()
 	return ti, address
 }
 
@@ -105,27 +103,44 @@ func Fetcher_chapter(uri string) []config.Chapter {
 	extensions.Referer(c)
 	var chapter []config.Chapter
 
-	c.OnHTML("dl", func(e *colly.HTMLElement)  {
-		e.DOM.Find("a[href]").Each(func(i int, selection *goquery.Selection) {
-			link, _:= selection.Attr("href")
-			addr := e.Request.AbsoluteURL(link)
-			chapter = append(chapter,config.Chapter{i, selection.Text(), addr})
-		})
-	})
+	//c.OnHTML("dl", func(e *colly.HTMLElement)  {
+	//	e.DOM.Find("a[href]").Each(func(i int, selection *goquery.Selection) {
+	//		link, _:= selection.Attr("href")
+	//		addr := e.Request.AbsoluteURL(link)
+	//		chapter = append(chapter,config.Chapter{i, selection.Text(), addr})
+	//	})
+	//})
+	//
+	//c.OnHTML("ul", func(e *colly.HTMLElement)  {
+	//	e.DOM.Find("a[href]").Each(func(i int, selection *goquery.Selection) {
+	//		link, _:= selection.Attr("href")
+	//		addr := e.Request.AbsoluteURL(link)
+	//		chapter = append(chapter,config.Chapter{i, selection.Text(), addr})
+	//	})
+	//})
 
-	c.OnHTML("ul", func(e *colly.HTMLElement)  {
-		e.DOM.Find("a[href]").Each(func(i int, selection *goquery.Selection) {
+	c.OnResponse(func(r *colly.Response) {
+		bufReader := bufio.NewReader(strings.NewReader(string(r.Body)))
+		doc, _ := goquery.NewDocumentFromReader(bufReader)
+		doc.Find("dl").Find("a[href]").Each(func(i int, selection *goquery.Selection) {
 			link, _:= selection.Attr("href")
-			addr := e.Request.AbsoluteURL(link)
+			addr := r.Request.AbsoluteURL(link)
 			chapter = append(chapter,config.Chapter{i, selection.Text(), addr})
 		})
+
+		if len(chapter) == 0 {
+			doc.Find("ul").Find("a[href]").Each(func(i int, selection *goquery.Selection) {
+				link, _:= selection.Attr("href")
+				addr := r.Request.AbsoluteURL(link)
+				chapter = append(chapter,config.Chapter{i, selection.Text(), addr})
+			})
+		}
 	})
 
 	c.OnError(func(r *colly.Response, err error) {
 		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError", err)
 	})
 	c.Visit(uri)
-	c.Wait()
 	return chapter
 }
 
@@ -151,9 +166,7 @@ func Fetcher_content(uri string)  {
 
 	c.OnResponse(func(r *colly.Response) {
 		bufReader := bufio.NewReader(strings.NewReader(string(r.Body)))
-		s := determineEncoding(bufReader)
-		utf8Reader := transform.NewReader(bufReader, s.NewDecoder())
-		doc, _ := goquery.NewDocumentFromReader(utf8Reader)
+		doc, _ := goquery.NewDocumentFromReader(bufReader)
 		fmt.Println(blank.Remove(doc.Find("div#content").Text()))
 	})
 

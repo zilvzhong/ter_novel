@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/modood/table"
+	"strconv"
 	"strings"
 	"ter_novel/config"
 	"ter_novel/fetcher"
@@ -78,10 +79,12 @@ func main() {
 							chapter := fetcher.Fetcher_chapter(n.Addr)
 							if len(chapter) != 0 {
 								table.Output(chapter)
+								var n int
 								R:
 								for {
 									fmt.Fprintf(color.Output, "$$$%s", color.CyanString("请输入查看的章节Id："))
 									chapterid := strings.TrimSpace(config.GetInputString())
+									n, _ = strconv.Atoi(chapterid)
 									switch {
 									case len(chapterid) == 0 :
 										continue
@@ -94,9 +97,16 @@ func main() {
 										continue
 									case chapterid == "return":
 										break R
+									case chapterid == "p":
+										for _, c := range chapter {
+											if c.Id == n {
+												fmt.Fprintf(color.Output, "~~~~~~：%s", color.GreenString(fmt.Sprintln(c)))
+												fetcher.Fetcher_content(c.Addr)
+											}
+										}
 									default:
 										c, stu := config.Getcontent_id(chapterid, chapter)
-										fmt.Println(c)
+										fmt.Fprintf(color.Output, "~~~~~~：%s", color.GreenString(fmt.Sprintln(c)))
 										if !stu {
 											fmt.Fprintf(color.Output,"$$$%s", color.RedString("您输入的Id不在表Id范围，可通过show再查看表\n"))
 											continue
