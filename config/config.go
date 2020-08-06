@@ -36,6 +36,7 @@ type Chapter struct {
 }
 
 func init() {
+	//添加源站点小说检索的URL
 	SiteUrl = []string{
 		"www.dingdiann.com/searchbook.php?keyword=",
 		"www.booktxt.com/search.php?q=",
