@@ -35,4 +35,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build  -o ./release/ter_novel.linux
 
 程序运行后直接输入需要查看的小说名称，如图
 ![novel1](./images/novel1.png)
-
+通过输入ID选择要进行阅读的小说站点，如果
+![novel2](./images/novel2.png)
+最后输入要查看的章节ID，如图
+![novel3](./images/novel3.png)
